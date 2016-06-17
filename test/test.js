@@ -17,10 +17,9 @@ describe('node-env/sdk/environment', function (done) {
     env.length.should.be.equal(5);
   });
 
-  it("Key processor leaves values unchanged", function (done) {
+  it("Key processor leaves values unchanged", function () {
     var result = keyProcessor.procKey('Name', 'VALUE');
     result.should.be.equal('VALUE');
-    setInterval(done, 10*1000);
   });
 
   it("Key processor replaces \\r with an empty space", function () {
