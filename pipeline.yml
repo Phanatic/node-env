@@ -1,0 +1,129 @@
+---
+resource_types:
+- name: "slack_notifier_type"
+  type: "docker-image"
+  source:
+    repository: "stackato/slack-notification-resource"
+    tag: "2.0.3-b4624d8d"
+
+resources:
+  - name: "helionce-git-repo"
+    type: "git"
+    source:
+      uri: "https://github.com/Phanatic/node-env.git"
+      branch: "master"
+      skip_ssl_verification: false
+  - name: "slack_notifier"
+    type: "slack_notifier_type"
+    source:
+      url: "https://hooks.slack.com/services/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"
+      username: "Concourse"
+      channel: "test-notify"
+jobs:
+  - name: "start-job-in-pipeline"
+    serial: true
+    plan:
+      - get: "helionce-git-repo"
+      - put: "slack_notifier"
+        params:
+          message: " "
+          attachments:
+            - fallback: "Helion Code Engine Status"
+              color: "#ffcc00"
+              title: "Building Started"
+              title_link: "http://hce.com/v2/pipelines/execution/3"
+              fields:
+                - title: "Commit"
+                  value: "<https://github.com/flacnut/docker-node-hello/commit/d8ee27e88db794d1cd8762be209f4c4103895a98|FOR THE DEMO>"
+                  short: true
+                - title: "Branch"
+                  value: "master"
+                  short: true
+                - title: "Committer"
+                  value: "flacnut"
+                  short: true
+                - title: "Project"
+                  value: "node-env"
+                  short: true
+      - task: "Building"
+        config:
+          platform: "linux"
+          image_resource:
+            type: "docker-image"
+            source:
+              repository: "node"
+              tag: "6.10.2-alpine"
+          inputs:
+            - name: "helionce-git-repo"
+              path: "src"
+          outputs:
+            - name: "build_code_output"
+              path: "out"
+          run:
+            dir: "src"
+            path: "sh"
+            args:
+              - "-c"
+              - "npm install && ( cd ../ && cp -r src/* out/)"
+      - put: "slack_notifier"
+        params:
+          message: " "
+          attachments:
+            - fallback: "Helion Code Engine Status"
+              color: "#ffcc00"
+              title: "Testing Started"
+              title_link: "http://hce.com/v2/pipelines/execution/3"
+              fields:
+                - title: "Commit"
+                  value: "<https://github.com/flacnut/docker-node-hello/commit/d8ee27e88db794d1cd8762be209f4c4103895a98|FOR THE DEMO>"
+                  short: true
+                - title: "Branch"
+                  value: "master"
+                  short: true
+                - title: "Committer"
+                  value: "flacnut"
+                  short: true
+                - title: "Project"
+                  value: "node-env"
+                  short: true
+      - task: "Testing"
+        config:
+          platform: "linux"
+          image_resource:
+            type: "docker-image"
+            source:
+              repository: "node"
+              tag: "6.10.2-alpine"
+          inputs:
+            - name: "build_code_output"
+              path: "src"
+          outputs:
+            - name: "test_code_output"
+              path: "out"
+          run:
+            dir: "src"
+            path: "sh"
+            args:
+              - "-c"
+              - "npm test"
+      - put: "slack_notifier"
+        params:
+          message: " "
+          attachments:
+            - fallback: "Helion Code Engine Status"
+              color: "#00ff00"
+              title: "Testing Completed, All Good!"
+              title_link: "http://hce.com/v2/pipelines/execution/3"
+              fields:
+                - title: "Commit"
+                  value: "<https://github.com/flacnut/docker-node-hello/commit/d8ee27e88db794d1cd8762be209f4c4103895a98|FOR THE DEMO>"
+                  short: true
+                - title: "Branch"
+                  value: "master"
+                  short: true
+                - title: "Committer"
+                  value: "flacnut"
+                  short: true
+                - title: "Project"
+                  value: "node-env"
+                  short: true
