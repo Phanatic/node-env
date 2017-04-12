@@ -24,6 +24,7 @@ jobs:
     serial: true
     plan:
       - get: "helionce-git-repo"
+        trigger: true
       - put: "slack_notifier"
         params:
           message: " "
